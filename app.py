@@ -203,7 +203,25 @@ async def 출석미달(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
-# 명령어 목록을 출력하는 embed 명령어
+# 출석체크 초기화 명령어
+@bot.tree.command(name="출석초기화", description="출석 기록을 초기화합니다. (관리자 전용)")
+async def 출석초기화(interaction: discord.Interaction, 비밀번호: str):
+    # 환경 변수에서 비밀번호 가져오기
+    admin_password = os.getenv('ADMIN_PASSWORD')
+    
+    if 비밀번호 != admin_password:
+        await interaction.response.send_message("비밀번호가 일치하지 않습니다.", ephemeral=True)
+        return
+
+    guild_id = interaction.guild_id
+
+    # 해당 길드의 모든 출석 기록 삭제
+    c.execute('DELETE FROM attendance WHERE guild_id=?', (guild_id,))
+    conn.commit()
+
+    await interaction.response.send_message("출석 기록이 초기화되었습니다.", ephemeral=True)
+
+# 명령어 목록을 출력하는 embed 명령어 수정
 @bot.tree.command(name="명령어", description="봇의 명령어 목록을 확인합니다.")
 async def 명령어(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -219,7 +237,8 @@ async def 명령어(interaction: discord.Interaction):
             "`/출석` - 오늘 출석을 합니다. 하루에 한 번만 가능.\n"
             "`/주간출석` - 이번 주에 몇 번 출석했는지 전체 사용자의 출석 횟수를 확인합니다.\n"
             "`/출석랭킹` - 모든 사용자의 누적 출석 랭킹을 보여줍니다.\n"
-            "`/마지막출석` - 본인의 마지막 출석 시간을 확인합니다."
+            "`/마지막출석` - 본인의 마지막 출석 시간을 확인합니다.\n"
+            "`/출석초기화` - 출석 기록을 초기화합니다. (관리자 전용)"
         ),
         inline=False
     )
